@@ -5,6 +5,7 @@ author: |
   | W. Evan Johnson, Ph.D.
   | Professor, Division of Infectious Disease
   | Director, Center for Data Science
+  | Associate Director, Center for Biomedical Informatics and Health AI
   | Rutgers University -- New Jersey Medical School
   | w.evan.johnson@rutgers.edu
 date: "`r Sys.Date()`"
@@ -61,7 +62,7 @@ img_path <- "figs/"
 * [Click here for the Zoom link](https://rutgers.zoom.us/j/92970463934?pwd=wVF7nGblCNaAMon3fFlRwboSgEiDUg.1)
 * GitHub vs Canvas:
     + [https://github.com/wevanjohnson/2025_Spring_BMDA](https://github.com/wevanjohnson/2026_Spring_BMDA)
-* [Link to Syllabus](https://github.com/wevanjohnson/2026_Spring_BMDA/blob/main/BiomedicalDataScience_Syllabus.docx)
+* [Link to Syllabus](https://github.com/wevanjohnson/2026_Spring_BMDA/raw/refs/heads/main/BiomedicalDataScience_Syllabus.docx)
 * Background experience
   * Introductory statistics and molecular biology
 * Prerequisites (Fundamentals of Data Science)

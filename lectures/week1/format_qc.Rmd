@@ -7,6 +7,7 @@ author: |
   | W. Evan Johnson, Ph.D.
   | Professor, Division of Infectious Disease
   | Director, Center for Data Science
+  | Associate Director, Center for Biomedical Informatics and Health AI
   | Rutgers University -- New Jersey Medical School
 date: "`r Sys.Date()`"
 header-includes:
