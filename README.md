@@ -81,40 +81,39 @@ Violations of academic integrity will be treated in accordance with university p
 ### COURSE TOPICS AND OUTLINE (BY WEEK; MAY BE MODIFIED AS NEEDED)
 Introduction: Sequencing data formats and quality control (Week 1)
 
-* 4/23/25:     Course introduction; Essential tools for Data Science **In Person**
-* 4/23/25:     Data formats (.fasta, .fastq, .sam/.bam); FASTQC and multiQC **(asynchronous lecture)**
+* 4/22/26:     Course introduction; Essential tools for Data Science 
 
-Genomics data analysis: Data wrangling and variation analysis (Week 2)
+Sequencing data formats and quality control; Genomics data analysis and wrangling (Week 2)
 
-* 4/28/25:     Sequence trimming and QC; alignment and wrangling
-* 4/30/25:     Genomic sequence variation analysis **(asynchronous lecture)**
+* 4/27/26:     Data formats (.fasta, .fastq, .sam/.bam); FASTQC and multiQC 
+* 4/29/26:     Sequence trimming and QC; alignment and wrangling **(asynchronous lecture)**
 
 Genomics data analysis: Linkage and genome-wide association (GWAS) (Week 3)
 
-* 5/5/24:    Linkage analysis; Phylogenetic trees
-* 5/7/24:    Genome-wide association testing
+* 5/4/26:     Genomic sequence variation analysis ( Maybe: Linkage analysis; Phylogenetic trees)
+* 5/6/26:    Genome-wide association testing
 
 Gene expression and proteomics analysis (Week 4)
 
-* 5/12/24:    Quantitative trait analysis 
-* 5/14/24:    Clustering/heatmaps; Dimension reduction **In Person**
+* 5/11/26:    Quantitative trait analysis **In Person**
+* 5/13/26:    Clustering/heatmaps; Dimension reduction **In Person**
 
 Gene expression and proteomics analysis; Network analysis (Week 5)
 
-* 5/19/24:   Batch correction; Differential expression analysis
-* 5/21/24:   Pathway/network analysis
+* 5/18/24:   Batch correction; Differential expression analysis **(asynchronous lecture)**
+* 5/20/24:   Pathway/network analysis **(asynchronous lecture)** 
 
 Single cell and epigenetic data analysis (Week 6)
 
-* 5/26/25:   Single cell RNA-seq analysis **(Memorial Day; asynchronous lecture)**
-* 5/28/25:   Bump hunting/peak finding; Regulatory network analysis **(asynchronous lecture)**
+* 5/25/26:   Single cell RNA-seq analysis **(Memorial Day; asynchronous lecture)**
+* 5/28/26:   Bump hunting/peak finding; Regulatory network analysis **(asynchronous lecture)**
 
 Microbiome data analysis (Week 7)
 
-* 6/2/25:   Diversity analysis; Dimension reduction
-* 6/4/25:   Differential abundance; Co-occurrence and functional analyses; Final Projects Due
+* 6/1/26:   Diversity analysis; Dimension reduction
+* 6/3/26:   Differential abundance; Co-occurrence and functional analyses
 
 Imaging and spatial data analysis (Week 8)
 
-* 6/9/25: Types of imaging data; Tools for image analysis
-* 6/11/25: Pattern recognition and machine learning
+* 6/8/26: Types of imaging data; Tools for image analysis
+* 6/10/26: Pattern recognition and machine learning
