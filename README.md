@@ -18,7 +18,7 @@ By the end of this course, students will:
 A working knowledge and experience with R, GitHub, and Unix is required. Students are required to complete GSND 5345Q (Fundamentals of Data Science) prior to taking this course, or have equivalent experience. An introductory course in statistics or biostatistics is also recommended (e.g., GSND 5135Q or MSBS N5030), or comparable experience in statistical analysis. Students without sufficient background in coding or statistics are expected to acquire these skills before the course begins. Please contact Dr. Johnson for a list of required proficiencies and available asynchronous resources to help build the necessary programming and statistical foundations.
 
 ## COURSE FORMAT:
-This class will be taught virtually using a synchronous remote modality, although students will be provided a classroom to gather for each lecture. A co-instructor will be present in the classroom for each lecture. Class will occur Mondays and Wednesdays from 12:00pm-1:50pm.. Courses may also be recorded and made available for students who need to miss classes due to personal reasons, illness, or research related needs.
+This class will be taught virtually using a synchronous remote modality, although students will be provided a classroom to gather for each lecture. A co-instructor will be present in the classroom for each lecture. Class will occur Mondays and Wednesdays from 12:00pm-1:50pm. Courses may also be recorded and made available for students who need to miss classes due to personal reasons, illness, or research related needs.
 
 ## ZOOM LINK AND CLASSROOM:
 Zoom Meeting ID for all sessions is Meeting ID: 929 7046 3934, with the password: 850292, or use the following direct link (the link is also available though the course GitHub page): https://rutgers.zoom.us/j/92970463934?pwd=wVF7nGblCNaAMon3fFlRwboSgEiDUg.1
@@ -69,12 +69,12 @@ This is an 8-week, 2.0 credit class near the end of Spring 2024. In general, you
 I **strongly** encourage you to contact early me if you have difficulty with the material. This course builds on material from prior lectures, so do not fall behind! My job is to help you understand the material as well as possible, and I am flexible with meeting times.
 
 ### ACADEMIC INTEGRITY: 
-You are expected to have read and follow the guidelines at the university’s academic integrity website (http://academicintegrity.rutgers.edu ). These principles forbid plagiarism and require that every Rutgers University student to:
+You are expected to have read and follow the guidelines at the university’s academic integrity website (http://academicintegrity.rutgers.edu). These principles forbid plagiarism and require that every Rutgers University student to:
 
 * Properly acknowledge and cite all use of the ideas, results, or words of others
 * Properly acknowledge all contributors to a given piece of work
 * Make sure that all work submitted as his or her own in a course or other academic activity isproduced without the aid of unsanctioned materials or unsanctioned collaboration
-* Treat all other students in an ethical manner, respecting their integrity and right to pursue their educational goals without interference. This requires that a student neither facilitate academic dishonesty by others nor obstruct their academic progress (reproduced from: ttp://academicintegrity.rutgers.edu/academic-integrity-at-rutgers/ ).
+* Treat all other students in an ethical manner, respecting their integrity and right to pursue their educational goals without interference. This requires that a student neither facilitate academic dishonesty by others nor obstruct their academic progress (reproduced from: http://academicintegrity.rutgers.edu/academic-integrity-at-rutgers/).
 
 Violations of academic integrity will be treated in accordance with university policy, and sanctions for violations may range from no credit for the assignment, to a failing course grade to (for the most severe violations) dismissal from the university.
 
