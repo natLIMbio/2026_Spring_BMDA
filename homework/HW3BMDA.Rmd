@@ -31,7 +31,7 @@ BiocManager::install("Rsubread")
 
 # Index the genome:
 library(Rsubread)
-buildindex("","")
+buildindex("genomefile", "genomefile.fa")
 
 # Align the reads:
 align("genomefile", "myfastqfile.fq", 
