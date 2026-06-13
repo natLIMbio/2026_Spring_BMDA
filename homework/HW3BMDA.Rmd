@@ -31,7 +31,7 @@ BiocManager::install("Rsubread")
 
 # Index the genome:
 library(Rsubread)
-buildindex("C:/Users/unowh/Desktop/Spring 2026/2026_Spring_BMDA/lectures/week3/chrX_5MB.fa","C:/Users/unowh/Desktop/Spring 2026/2026_Spring_BMDA/homework/hivtb_SRR_metadata.txt")
+buildindex("","")
 
 # Align the reads:
 align("genomefile", "myfastqfile.fq", 
