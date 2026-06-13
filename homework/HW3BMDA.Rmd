@@ -1,0 +1,109 @@
+---
+title: "HW 3 BMDA"
+author: "Nat Lim"
+date: "2026-06-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In Homework 1 you downloaded and QC'd the 33 FASTQ files for the HIV/TB dataset from SRA. In this assignment you will carry those reads through a complete RNA-seq differential expression analysis.
+
+Please save all your code for each part of the assignment. Your instructor may request it, and it may also be used for awarding partial credit if needed. We strongly recommend completing the assignment in an RMarkdown document to ensure your work is well-documented and reproducible.
+
+Submit your completed assignment via the designated homework (Quiz) submission site on Canvas.
+
+## RNA-sequencing analysis
+
+##### 1. Align the HIV/TB reads (downloaded in Homework 1) to the human genome reference using your choice of the `Rsubread` or the `STAR` aligners. Confirm whether or not you were able to successfully complete this step (on your honor).
+   
+  1. Yes
+  2. No
+
+```{r}
+# Install the Bioconductor installer
+install.packages("BiocManager")
+
+# Install Rsubread 
+BiocManager::install("Rsubread")
+
+# Index the genome:
+library(Rsubread)
+buildindex("C:/Users/unowh/Desktop/Spring 2026/2026_Spring_BMDA/lectures/week3/chrX_5MB.fa","C:/Users/unowh/Desktop/Spring 2026/2026_Spring_BMDA/homework/hivtb_SRR_metadata.txt")
+
+# Align the reads:
+align("genomefile", "myfastqfile.fq", 
+      output_file="myfastq.bam", nthreads = 4)
+
+```
+
+
+##### 2. Use the `featureCounts` function in the `Rsubread` package to generate a counts file for this dataset. Upload your feature counts .txt file here.
+
+
+
+For the rest of the assignment, please use the feature counts provided by Dr. Johnson in the lecture materials: {https://github.com/wevanjohnson/2026_Spring_BMDA/raw/refs/heads/main/lectures/week6/example_data/features_combined.txt}{features_combined.txt (link)}
+
+
+
+##### 3. Generate a `SummarizedExperiment` object for your counts. The `colData` for these data are provided in the `homework2\_metadata.txt` file. What function is used to create a SummarizedExperiment object?
+  
+  1. SummarizedExperiment(assays = list(counts = as.matrix(counts)), colData = metadata)
+  2. makeSummarizedExp(as.matrix(counts), metadata)
+  3. seObject(counts, metadata)
+  4. summarizeData(data = counts, metadata = metadata)
+  5. buildExperiment(assay = as.matrix(counts), metadata = metadata)
+  
+
+##### 4. Preprocess these data by removing `TB-HIV-ART` samples (should be two of them), removing any genes with zero expression for all samples, and by generating a log counts per million assay. How may genes were removed with the zero expression filter?
+ 
+1. 48
+2. 2,204
+3. 9,700
+4. 17,385
+  
+
+##### 5. Create a batch corrected assay in your `SummarizedExperiment` using ComBat-Seq. You can use the `ComBat\_Seq` function in the `sva` package, or simply do it in `BatchQC` and then extract the `SummarizedExperiment`. For this example, pretend that `disease\_status` is the batch variable. Note that this will remove the disease status variability, so **don't** use this assay in the following analyses! This was merely a practice for cases where you have an actual batch variable. What command/syntax would work to apply ComBat-Seq?
+  
+  1. ComBat_seq(as.matrix(assay(se, "counts")), batch = se\$disease_status)
+  2. ComBat_seq(counts = assay(se), batch = disease_status)
+  3. BatchFix(se, "counts", batch = "disease_status")
+  4. combatCorrect(se\$counts, batch = se\$disease_status)
+  5. ComBat(se, "counts", batch = "disease_status")
+  
+
+##### 6. Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Color the TB-HIV to the HIV only samples in different colors. Note that you should be using the log CPM values for this analysis. Please attach your UMAP plot here.
+
+##### 7. Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB-HIV to the HIV only samples. What is the twenty second gene on the  differentially expressed gene list?
+  
+  1. IGF2BP3
+  2. AIM2
+  3. IL1R2
+  4. RAB20
+  5. FCGR1C
+  
+
+##### 8. Now conduct the same analysis using `limma` on the log CPM values. How do the `DESeq2` results compare to the `limma` results? What is the seventh gene on the  differentially expressed gene list?
+  
+  1. IGF2BP3
+  2. AIM2
+  3. IL1R2
+  4. RAB20
+  5. FCGR1C
+  
+
+##### 9. Give a heatmap plot of either the `DESeq2` or the `limma` results (top 50). Add a colorbar for disease status. Upload your plot here.
+
+##### 10. Conduct a pathway analysis of the top 50 Limma genes using enrichR (through R or online). Use the "Reactome\_Pathways\_2024" database. What is the top scoring pathway?
+   
+  1. "Interferon Gamma Signaling"
+  2. "Fatty Acid Metabolism"
+  3. "Cytokine Signaling in Immune System"
+  4. "RAB Geranylgeranylation"
+  
+
+##### 11. Conduct a TBSignatureProfiler analysis on these data -- including signature heatmaps, individual boxplots, and AUC boxplots. Interpret your findings. Upload one of your TBSignatureProfiler plots here.
+
+
