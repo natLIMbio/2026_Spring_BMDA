@@ -22,7 +22,7 @@ Submit your completed assignment via the designated homework (Quiz) submission s
   1. Yes
   2. No
 
-```{r}
+```{r, eval=FALSE}
 # Install the Bioconductor installer
 install.packages("BiocManager")
 
@@ -55,7 +55,29 @@ For the rest of the assignment, please use the feature counts provided by Dr. Jo
   3. seObject(counts, metadata)
   4. summarizeData(data = counts, metadata = metadata)
   5. buildExperiment(assay = as.matrix(counts), metadata = metadata)
-  
+
+```{r}
+library(SummarizedExperiment)
+
+# Read in counts
+counts <- read.delim("features_combined.txt", row.names = 1, check.names = FALSE)
+
+# Read in metadata
+metadata <- read.delim("hivtb_SRR_metadata.txt")
+
+# Make sure SampleID matches the count matrix column order
+rownames(metadata) <- metadata$SampleID
+metadata <- metadata[colnames(counts), ]
+
+# Build the SummarizedExperiment
+se <- SummarizedExperiment(
+  assays = list(counts = as.matrix(counts)),
+  colData = metadata
+)
+
+se
+```
+
 
 ##### 4. Preprocess these data by removing `TB-HIV-ART` samples (should be two of them), removing any genes with zero expression for all samples, and by generating a log counts per million assay. How may genes were removed with the zero expression filter?
  
@@ -63,7 +85,28 @@ For the rest of the assignment, please use the feature counts provided by Dr. Jo
 2. 2,204
 3. 9,700
 4. 17,385
-  
+
+```{r}
+# Remove TB-HIV-ART samples
+se <- se[, se$disease_status != "TB-HIV-ART"]
+dim(se)  # should now show 31 samples
+
+# Filter genes with zero expression across all samples
+keep <- rowSums(assay(se, "counts")) > 0
+n_removed <- sum(!keep)
+n_removed   # this answers the question
+
+se <- se[keep, ]
+dim(se)  # should show fewer genes
+
+# Generate log CPM assay
+library(edgeR)
+logcpm <- cpm(assay(se, "counts"), log = TRUE)
+assay(se, "logCPM") <- logcpm
+
+se
+```
+
 
 ##### 5. Create a batch corrected assay in your `SummarizedExperiment` using ComBat-Seq. You can use the `ComBat\_Seq` function in the `sva` package, or simply do it in `BatchQC` and then extract the `SummarizedExperiment`. For this example, pretend that `disease\_status` is the batch variable. Note that this will remove the disease status variability, so **don't** use this assay in the following analyses! This was merely a practice for cases where you have an actual batch variable. What command/syntax would work to apply ComBat-Seq?
   
@@ -73,8 +116,59 @@ For the rest of the assignment, please use the feature counts provided by Dr. Jo
   4. combatCorrect(se\$counts, batch = se\$disease_status)
   5. ComBat(se, "counts", batch = "disease_status")
   
+```{r}
+library(sva)
 
-##### 6. Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Color the TB-HIV to the HIV only samples in different colors. Note that you should be using the log CPM values for this analysis. Please attach your UMAP plot here.
+# ComBat-Seq practice (do NOT use this assay for downstream DE analysis)
+combat_counts <- ComBat_seq(
+  as.matrix(assay(se, "counts")), 
+  batch = se$disease_status
+)
+
+# Store it as a separate assay so it's clearly distinguished
+assay(se, "combat_counts") <- combat_counts
+
+se
+```
+
+
+
+##### 6. Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Color the TB-HIV to the HIV only samples in different colors. Note that you should be using the log CPM values for this analysis. Please attach your UMAP plot here. 
+
+```{r}
+library(umap)
+
+logcpm_mat <- t(assay(se, "logCPM"))  # samples as rows for PCA/UMAP
+
+# PCA
+pca <- prcomp(logcpm_mat, scale. = TRUE)
+pca_df <- data.frame(
+  PC1 = pca$x[,1],
+  PC2 = pca$x[,2],
+  disease_status = se$disease_status
+)
+
+library(ggplot2)
+ggplot(pca_df, aes(PC1, PC2, color = disease_status)) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  labs(title = "PCA of log CPM values")
+
+# UMAP
+set.seed(42)
+umap_res <- umap(logcpm_mat)
+umap_df <- data.frame(
+  UMAP1 = umap_res$layout[,1],
+  UMAP2 = umap_res$layout[,2],
+  disease_status = se$disease_status
+)
+
+ggplot(umap_df, aes(UMAP1, UMAP2, color = disease_status)) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  labs(title = "UMAP of log CPM values")
+```
+
 
 ##### 7. Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB-HIV to the HIV only samples. What is the twenty second gene on the  differentially expressed gene list?
   

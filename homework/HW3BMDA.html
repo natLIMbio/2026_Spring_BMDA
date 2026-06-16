@@ -374,7 +374,23 @@ submission site on Canvas.</p>
 genome reference using your choice of the <code>Rsubread</code> or the
 <code>STAR</code> aligners. Confirm whether or not you were able to
 successfully complete this step (on your honor).</h5>
-<p>Yes No</p>
+<ol style="list-style-type: decimal">
+<li>Yes</li>
+<li>No</li>
+</ol>
+<pre class="r"><code># Install the Bioconductor installer
+install.packages(&quot;BiocManager&quot;)
+
+# Install Rsubread 
+BiocManager::install(&quot;Rsubread&quot;)
+
+# Index the genome:
+library(Rsubread)
+buildindex(&quot;genomefile&quot;, &quot;genomefile.fa&quot;)
+
+# Align the reads:
+align(&quot;genomefile&quot;, &quot;myfastqfile.fq&quot;, 
+      output_file=&quot;myfastq.bam&quot;, nthreads = 4)</code></pre>
 </div>
 <div id="use-the-featurecounts-function-in-the-rsubread-package-to-generate-a-counts-file-for-this-dataset.-upload-your-feature-counts-.txt-file-here." class="section level5">
 <h5>2. Use the <code>featureCounts</code> function in the
@@ -397,6 +413,106 @@ colData = metadata)</li>
 <li>summarizeData(data = counts, metadata = metadata)</li>
 <li>buildExperiment(assay = as.matrix(counts), metadata = metadata)</li>
 </ol>
+<pre class="r"><code>library(SummarizedExperiment)</code></pre>
+<pre><code>## Loading required package: MatrixGenerics</code></pre>
+<pre><code>## Loading required package: matrixStats</code></pre>
+<pre><code>## 
+## Attaching package: &#39;MatrixGenerics&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:matrixStats&#39;:
+## 
+##     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+##     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+##     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+##     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+##     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+##     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+##     colWeightedMeans, colWeightedMedians, colWeightedSds,
+##     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+##     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+##     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+##     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+##     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+##     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+##     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+##     rowWeightedSds, rowWeightedVars</code></pre>
+<pre><code>## Loading required package: GenomicRanges</code></pre>
+<pre><code>## Loading required package: stats4</code></pre>
+<pre><code>## Loading required package: BiocGenerics</code></pre>
+<pre><code>## Loading required package: generics</code></pre>
+<pre><code>## 
+## Attaching package: &#39;generics&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+##     setequal, union</code></pre>
+<pre><code>## 
+## Attaching package: &#39;BiocGenerics&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     IQR, mad, sd, var, xtabs</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+##     colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+##     get, grep, grepl, is.unsorted, lapply, Map, mapply, match, mget,
+##     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+##     rbind, Reduce, rownames, sapply, saveRDS, table, tapply, unique,
+##     unsplit, which.max, which.min</code></pre>
+<pre><code>## Loading required package: S4Vectors</code></pre>
+<pre><code>## 
+## Attaching package: &#39;S4Vectors&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:utils&#39;:
+## 
+##     findMatches</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     expand.grid, I, unname</code></pre>
+<pre><code>## Loading required package: IRanges</code></pre>
+<pre><code>## 
+## Attaching package: &#39;IRanges&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:grDevices&#39;:
+## 
+##     windows</code></pre>
+<pre><code>## Loading required package: Seqinfo</code></pre>
+<pre><code>## Loading required package: Biobase</code></pre>
+<pre><code>## Welcome to Bioconductor
+## 
+##     Vignettes contain introductory material; view with
+##     &#39;browseVignettes()&#39;. To cite Bioconductor, see
+##     &#39;citation(&quot;Biobase&quot;)&#39;, and for packages &#39;citation(&quot;pkgname&quot;)&#39;.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Biobase&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:MatrixGenerics&#39;:
+## 
+##     rowMedians</code></pre>
+<pre><code>## The following objects are masked from &#39;package:matrixStats&#39;:
+## 
+##     anyMissing, rowMedians</code></pre>
+<pre class="r"><code># Read in counts
+counts &lt;- read.delim(&quot;features_combined.txt&quot;, row.names = 1, check.names = FALSE)
+
+# Read in metadata
+metadata &lt;- read.delim(&quot;hivtb_SRR_metadata.txt&quot;)
+
+# Make sure SampleID matches the count matrix column order
+rownames(metadata) &lt;- metadata$SampleID
+metadata &lt;- metadata[colnames(counts), ]
+
+# Build the SummarizedExperiment
+se &lt;- SummarizedExperiment(
+  assays = list(counts = as.matrix(counts)),
+  colData = metadata
+)
+
+se</code></pre>
+<pre><code>## class: SummarizedExperiment 
+## dim: 25369 33 
+## metadata(0):
+## assays(1): counts
+## rownames(25369): DDX11L1 WASH7P ... GOLGA2P3Y GOLGA2P2Y
+## rowData names(0):
+## colnames(33): R01_1 R01_10 ... R03_32 R03_33
+## colData names(3): sample_name SampleID disease_status</code></pre>
 </div>
 <div id="preprocess-these-data-by-removing-tb-hiv-art-samples-should-be-two-of-them-removing-any-genes-with-zero-expression-for-all-samples-and-by-generating-a-log-counts-per-million-assay.-how-may-genes-were-removed-with-the-zero-expression-filter" class="section level5">
 <h5>4. Preprocess these data by removing <code>TB-HIV-ART</code> samples
@@ -409,6 +525,38 @@ were removed with the zero expression filter?</h5>
 <li>9,700</li>
 <li>17,385</li>
 </ol>
+<pre class="r"><code># Remove TB-HIV-ART samples
+se &lt;- se[, se$disease_status != &quot;TB-HIV-ART&quot;]
+dim(se)  # should now show 31 samples</code></pre>
+<pre><code>## [1] 25369    31</code></pre>
+<pre class="r"><code># Filter genes with zero expression across all samples
+keep &lt;- rowSums(assay(se, &quot;counts&quot;)) &gt; 0
+n_removed &lt;- sum(!keep)
+n_removed   # this answers the question</code></pre>
+<pre><code>## [1] 2204</code></pre>
+<pre class="r"><code>se &lt;- se[keep, ]
+dim(se)  # should show fewer genes</code></pre>
+<pre><code>## [1] 23165    31</code></pre>
+<pre class="r"><code># Generate log CPM assay
+library(edgeR)</code></pre>
+<pre><code>## Loading required package: limma</code></pre>
+<pre><code>## 
+## Attaching package: &#39;limma&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:BiocGenerics&#39;:
+## 
+##     plotMA</code></pre>
+<pre class="r"><code>logcpm &lt;- cpm(assay(se, &quot;counts&quot;), log = TRUE)
+assay(se, &quot;logCPM&quot;) &lt;- logcpm
+
+se</code></pre>
+<pre><code>## class: SummarizedExperiment 
+## dim: 23165 31 
+## metadata(0):
+## assays(2): counts logCPM
+## rownames(23165): DDX11L1 WASH7P ... RBMY2FP LOC100652931
+## rowData names(0):
+## colnames(31): R01_1 R01_10 ... R02_30 R02_31
+## colData names(3): sample_name SampleID disease_status</code></pre>
 </div>
 <div id="create-a-batch-corrected-assay-in-your-summarizedexperiment-using-combat-seq.-you-can-use-the-combat_seq-function-in-the-sva-package-or-simply-do-it-in-batchqc-and-then-extract-the-summarizedexperiment.-for-this-example-pretend-that-disease_status-is-the-batch-variable.-note-that-this-will-remove-the-disease-status-variability-so-dont-use-this-assay-in-the-following-analyses-this-was-merely-a-practice-for-cases-where-you-have-an-actual-batch-variable.-what-commandsyntax-would-work-to-apply-combat-seq" class="section level5">
 <h5>5. Create a batch corrected assay in your
@@ -429,6 +577,49 @@ se$disease_status)</li>
 <li>combatCorrect(se$counts, batch = se$disease_status)</li>
 <li>ComBat(se, “counts”, batch = “disease_status”)</li>
 </ol>
+<pre class="r"><code>library(sva)</code></pre>
+<pre><code>## Loading required package: mgcv</code></pre>
+<pre><code>## Loading required package: nlme</code></pre>
+<pre><code>## 
+## Attaching package: &#39;nlme&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:IRanges&#39;:
+## 
+##     collapse</code></pre>
+<pre><code>## This is mgcv 1.9-4. For overview type &#39;?mgcv&#39;.</code></pre>
+<pre><code>## Loading required package: genefilter</code></pre>
+<pre><code>## 
+## Attaching package: &#39;genefilter&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:MatrixGenerics&#39;:
+## 
+##     rowSds, rowVars</code></pre>
+<pre><code>## The following objects are masked from &#39;package:matrixStats&#39;:
+## 
+##     rowSds, rowVars</code></pre>
+<pre><code>## Loading required package: BiocParallel</code></pre>
+<pre class="r"><code># ComBat-Seq practice (do NOT use this assay for downstream DE analysis)
+combat_counts &lt;- ComBat_seq(
+  as.matrix(assay(se, &quot;counts&quot;)), 
+  batch = se$disease_status
+)</code></pre>
+<pre><code>## Found 2 batches
+## Using null model in ComBat-seq.
+## Adjusting for 0 covariate(s) or covariate level(s)
+## Estimating dispersions
+## Fitting the GLM model
+## Shrinkage off - using GLM estimates for parameters
+## Adjusting the data</code></pre>
+<pre class="r"><code># Store it as a separate assay so it&#39;s clearly distinguished
+assay(se, &quot;combat_counts&quot;) &lt;- combat_counts
+
+se</code></pre>
+<pre><code>## class: SummarizedExperiment 
+## dim: 23165 31 
+## metadata(0):
+## assays(3): counts logCPM combat_counts
+## rownames(23165): DDX11L1 WASH7P ... RBMY2FP LOC100652931
+## rowData names(0):
+## colnames(31): R01_1 R01_10 ... R02_30 R02_31
+## colData names(3): sample_name SampleID disease_status</code></pre>
 </div>
 <div id="apply-pca-and-umap-to-your-data-and-generate-dimension-reduction-plots-for-the-results.-color-the-tb-hiv-to-the-hiv-only-samples-in-different-colors.-note-that-you-should-be-using-the-log-cpm-values-for-this-analysis.-please-attach-your-umap-plot-here." class="section level5">
 <h5>6. Apply PCA and UMAP to your data and generate dimension reduction
