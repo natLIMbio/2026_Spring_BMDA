@@ -2,18 +2,16 @@
 title: "HW 3 BMDA"
 author: "Nat Lim"
 date: "2026-06-13"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = TRUE)
 ```
 
 In Homework 1 you downloaded and QC'd the 33 FASTQ files for the HIV/TB dataset from SRA. In this assignment you will carry those reads through a complete RNA-seq differential expression analysis.
-
-Please save all your code for each part of the assignment. Your instructor may request it, and it may also be used for awarding partial credit if needed. We strongly recommend completing the assignment in an RMarkdown document to ensure your work is well-documented and reproducible.
-
-Submit your completed assignment via the designated homework (Quiz) submission site on Canvas.
 
 ## RNA-sequencing analysis
 
@@ -23,20 +21,13 @@ Submit your completed assignment via the designated homework (Quiz) submission s
   2. No
 
 ```{r, eval=FALSE}
-# Install the Bioconductor installer
-install.packages("BiocManager")
+require("BiocManager")
 
-# Install Rsubread 
-BiocManager::install("Rsubread")
-
-# Index the genome:
 library(Rsubread)
 buildindex("genomefile", "genomefile.fa")
 
-# Align the reads:
 align("genomefile", "myfastqfile.fq", 
       output_file="myfastq.bam", nthreads = 4)
-
 ```
 
 
@@ -50,7 +41,7 @@ For the rest of the assignment, please use the feature counts provided by Dr. Jo
 
 ##### 3. Generate a `SummarizedExperiment` object for your counts. The `colData` for these data are provided in the `homework2\_metadata.txt` file. What function is used to create a SummarizedExperiment object?
   
-  1. SummarizedExperiment(assays = list(counts = as.matrix(counts)), colData = metadata)
+  1. **SummarizedExperiment(assays = list(counts = as.matrix(counts)), colData = metadata)**
   2. makeSummarizedExp(as.matrix(counts), metadata)
   3. seObject(counts, metadata)
   4. summarizeData(data = counts, metadata = metadata)
@@ -59,20 +50,14 @@ For the rest of the assignment, please use the feature counts provided by Dr. Jo
 ```{r}
 library(SummarizedExperiment)
 
-# Read in counts
 counts <- read.delim("features_combined.txt", row.names = 1, check.names = FALSE)
 
-# Read in metadata
 metadata <- read.delim("hivtb_SRR_metadata.txt")
 
-# Make sure SampleID matches the count matrix column order
 rownames(metadata) <- metadata$SampleID
 metadata <- metadata[colnames(counts), ]
 
-# Build the SummarizedExperiment
-se <- SummarizedExperiment(
-  assays = list(counts = as.matrix(counts)),
-  colData = metadata
+se <- SummarizedExperiment(assays = list(counts = as.matrix(counts)), colData = metadata
 )
 
 se
@@ -82,24 +67,21 @@ se
 ##### 4. Preprocess these data by removing `TB-HIV-ART` samples (should be two of them), removing any genes with zero expression for all samples, and by generating a log counts per million assay. How may genes were removed with the zero expression filter?
  
 1. 48
-2. 2,204
+2. **2,204**
 3. 9,700
 4. 17,385
 
 ```{r}
-# Remove TB-HIV-ART samples
 se <- se[, se$disease_status != "TB-HIV-ART"]
-dim(se)  # should now show 31 samples
+dim(se)
 
-# Filter genes with zero expression across all samples
 keep <- rowSums(assay(se, "counts")) > 0
 n_removed <- sum(!keep)
-n_removed   # this answers the question
+n_removed
 
 se <- se[keep, ]
-dim(se)  # should show fewer genes
+dim(se)
 
-# Generate log CPM assay
 library(edgeR)
 logcpm <- cpm(assay(se, "counts"), log = TRUE)
 assay(se, "logCPM") <- logcpm
@@ -110,22 +92,17 @@ se
 
 ##### 5. Create a batch corrected assay in your `SummarizedExperiment` using ComBat-Seq. You can use the `ComBat\_Seq` function in the `sva` package, or simply do it in `BatchQC` and then extract the `SummarizedExperiment`. For this example, pretend that `disease\_status` is the batch variable. Note that this will remove the disease status variability, so **don't** use this assay in the following analyses! This was merely a practice for cases where you have an actual batch variable. What command/syntax would work to apply ComBat-Seq?
   
-  1. ComBat_seq(as.matrix(assay(se, "counts")), batch = se\$disease_status)
+  1. **ComBat_seq(as.matrix(assay(se, "counts")), batch = se$disease_status)**
   2. ComBat_seq(counts = assay(se), batch = disease_status)
   3. BatchFix(se, "counts", batch = "disease_status")
-  4. combatCorrect(se\$counts, batch = se\$disease_status)
+  4. combatCorrect(se$counts, batch = se\$disease_status)
   5. ComBat(se, "counts", batch = "disease_status")
   
-```{r}
+```{r, eval=FALSE}
 library(sva)
 
-# ComBat-Seq practice (do NOT use this assay for downstream DE analysis)
-combat_counts <- ComBat_seq(
-  as.matrix(assay(se, "counts")), 
-  batch = se$disease_status
-)
+combat_counts <- ComBat_seq(as.matrix(assay(se, "counts")), batch = se$disease_status)
 
-# Store it as a separate assay so it's clearly distinguished
 assay(se, "combat_counts") <- combat_counts
 
 se
@@ -138,9 +115,8 @@ se
 ```{r}
 library(umap)
 
-logcpm_mat <- t(assay(se, "logCPM"))  # samples as rows for PCA/UMAP
+logcpm_mat <- t(assay(se, "logCPM"))
 
-# PCA
 pca <- prcomp(logcpm_mat, scale. = TRUE)
 pca_df <- data.frame(
   PC1 = pca$x[,1],
@@ -154,7 +130,6 @@ ggplot(pca_df, aes(PC1, PC2, color = disease_status)) +
   theme_minimal() +
   labs(title = "PCA of log CPM values")
 
-# UMAP
 set.seed(42)
 umap_res <- umap(logcpm_mat)
 umap_df <- data.frame(
@@ -170,34 +145,172 @@ ggplot(umap_df, aes(UMAP1, UMAP2, color = disease_status)) +
 ```
 
 
-##### 7. Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB-HIV to the HIV only samples. What is the twenty second gene on the  differentially expressed gene list?
+##### 7. Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB-HIV to the HIV only samples. What is the twenty second gene on the differentially expressed gene list?
   
   1. IGF2BP3
   2. AIM2
   3. IL1R2
   4. RAB20
-  5. FCGR1C
-  
+  5. **FCGR1C**
 
-##### 8. Now conduct the same analysis using `limma` on the log CPM values. How do the `DESeq2` results compare to the `limma` results? What is the seventh gene on the  differentially expressed gene list?
+```{r}
+library(DESeq2)
+
+dds <- DESeqDataSetFromMatrix(
+  countData = assay(se, "counts"),
+  colData   = colData(se),
+  design    = ~ disease_status
+)
+
+dds <- DESeq(dds)
+res <- results(dds, contrast = c("disease_status", "TB-HIV", "HIV"))
+
+# Order by significance (typically by p-value)
+res_ordered <- res[order(res$pvalue), ]
+head(as.data.frame(res_ordered), 25)
+
+# The 22nd gene:
+rownames(res_ordered)[22]
+```
+
+
+
+##### 8. Now conduct the same analysis using `limma` on the log CPM values. How do the `DESeq2` results compare to the `limma` results? What is the seventh gene on the differentially expressed gene list?
   
   1. IGF2BP3
   2. AIM2
-  3. IL1R2
+  3. **IL1R2**
   4. RAB20
   5. FCGR1C
-  
+
+```{r}
+library(limma)
+
+logcpm_mat <- assay(se, "logCPM")  # genes as rows, samples as columns
+
+design <- model.matrix(~ disease_status, data = colData(se))
+
+fit <- lmFit(logcpm_mat, design)
+fit <- eBayes(fit)
+
+res_limma <- topTable(fit, coef = 2, number = Inf, sort.by = "P")
+head(res_limma, 25)
+
+# The 7th gene:
+rownames(res_limma)[7]
+```
 
 ##### 9. Give a heatmap plot of either the `DESeq2` or the `limma` results (top 50). Add a colorbar for disease status. Upload your plot here.
+
+```{r}
+library(ComplexHeatmap)
+library(circlize)
+
+# Top 50 genes from DESeq2 results
+top50 <- rownames(res_ordered)[1:50]
+
+# Pull their logCPM values
+mat <- assay(se, "logCPM")[top50, ]
+
+# Scale by row (z-score) so the heatmap shows relative expression patterns
+mat_scaled <- t(scale(t(mat)))
+
+# Annotation colorbar for disease status
+ha <- HeatmapAnnotation(
+  disease_status = se$disease_status,
+  col = list(disease_status = c("TB-HIV" = "firebrick", "HIV" = "steelblue"))
+)
+
+Heatmap(
+  mat_scaled,
+  name = "z-score",
+  top_annotation = ha,
+  show_row_names = TRUE,
+  show_column_names = TRUE,
+  column_title = "Top 50 DESeq2 DE Genes (TB-HIV vs HIV)",
+  row_names_gp = grid::gpar(fontsize = 6)
+)
+```
+
 
 ##### 10. Conduct a pathway analysis of the top 50 Limma genes using enrichR (through R or online). Use the "Reactome\_Pathways\_2024" database. What is the top scoring pathway?
    
   1. "Interferon Gamma Signaling"
   2. "Fatty Acid Metabolism"
-  3. "Cytokine Signaling in Immune System"
+  3. **"Cytokine Signaling in Immune System"**
   4. "RAB Geranylgeranylation"
-  
+
+```{r}
+require("enrichR")  # if not already installed
+library(enrichR)
+
+# Confirm the database is available
+dbs <- listEnrichrDbs()
+"Reactome_Pathways_2024" %in% dbs$libraryName
+
+# Top 50 limma genes
+top50_limma <- rownames(res_limma)[1:50]
+
+# Run enrichment
+enriched <- enrichr(top50_limma, databases = "Reactome_Pathways_2024")
+
+# View top results
+reactome_results <- enriched[["Reactome_Pathways_2024"]]
+head(reactome_results[order(reactome_results$P.value), c("Term","P.value","Adjusted.P.value")], 50)
+
+# Top scoring pathway:
+reactome_results$Term[which.min(reactome_results$P.value)]
+```
+
 
 ##### 11. Conduct a TBSignatureProfiler analysis on these data -- including signature heatmaps, individual boxplots, and AUC boxplots. Interpret your findings. Upload one of your TBSignatureProfiler plots here.
 
+```{r}
+library(TBSignatureProfiler)
+
+# Run profiling using ssGSEA on the logCPM assay
+sigs_result <- runTBsigProfiler(
+  input        = se,
+  useAssay     = "logCPM",
+  algorithm    = "ssGSEA",
+  signatures   = TBsignatures,   # the full built-in signature library
+  parallel.sz  = 1,
+  combineSigAndAlgorithm = TRUE
+)
+
+# Check what signature score columns got added
+colnames(colData(sigs_result))
+```
+```{r}
+sigs_to_plot <- c("Chen_HIV_4", "Sambarey_HIV_10", "Sweeney_OD_3", "Zak_RISK_16")
+
+signatureHeatmap(
+  sigs_result,
+  signatureColNames = sigs_to_plot,
+  annotationColNames = "disease_status",
+  scale = TRUE,
+  showColumnNames = FALSE,
+  name = "TB/HIV Signature Scores"
+)
+```
+
+```{r}
+signatureBoxplot(
+  inputData = sigs_result,
+  name = "Chen_HIV_4 Signature Score",
+  signatureColNames = "Chen_HIV_4",
+  annotationColName = "disease_status"
+)
+```
+
+```{r}
+auc_table <- tableAUC(
+  SE_scored = sigs_result,
+  annotationColName = "disease_status",
+  signatureColNames = sigs_to_plot,
+  num.boot = 100
+)
+
+auc_table
+```
 

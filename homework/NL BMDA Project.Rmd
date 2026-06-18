@@ -11,10 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Nat Lim BMDA Project
 
-## **Objective**
-Take a real biomedical dataset from raw data through interpretation, using one (or more) of the methods we covered this semester. This is a small but **complete data analysis project.** You will present your analysis in a recorded video and provide constructive feedback on your classmates' projects.
+## 1. Background and Question
 
-## **Instructions**
+
 
 ### **1. Pick a Dataset and an Analysis Type**
 Choose one of the following analysis families that we covered in class (or another one you clear with the instructor):
