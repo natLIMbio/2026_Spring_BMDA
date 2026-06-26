@@ -1,0 +1,303 @@
+---
+title: "NL BMDA Final Project: Glucocorticoid Response in Airway Smooth Muscle Cells"
+author: "Nat Lim"
+date: "2026-06-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+### 1. Background and Question
+
+Asthma is a chronic inflammatory airway disease, and inhaled corticosteroids
+(synthetic glucocorticoids like dexamethasone) are a first-line treatment because
+they suppress inflammation in airway smooth muscle (ASM). However, not all
+patients respond equally well, and the full transcriptional program that
+glucocorticoids switch on in ASM cells is still being mapped out.
+
+##### **Dataset:** 
+Himes et al. (2014) treated four primary human ASM cell lines with
+1 micromolar dexamethasone (or vehicle control) for 18 hours and ran RNA-seq on
+all eight samples (paired design: each donor cell line contributes one treated
+and one untreated sample). Data are deposited at GEO under accession **GSE52778**
+and are also distributed as a pre-counted, analysis-ready object in the
+Bioconductor `airway` package.
+
+##### **Question:** 
+Which genes are significantly up- or down-regulated in human ASM
+cells after dexamethasone treatment, and do our top hits recover genes already
+implicated in glucocorticoid/asthma biology in the literature? 
+
+This matters because genes that consistently respond to corticosteroids in ASM are candidates
+for understanding (and eventually predicting) corticosteroid response/resistance
+in asthma patients.
+
+### 2. Data Acquisition
+
+```{r install-packages, eval=FALSE}
+# This is set to eval=FALSE because it only needs to be run the first time the code is run
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install(c("airway", "DESeq2", "SummarizedExperiment", "pheatmap",
+                        "org.Hs.eg.db", "AnnotationDbi", "apeglm"))
+```
+
+```{r load-packages}
+# airway: this is our data acquisition step. The package is directly loaded with the 
+# gene-level count matrix from Himes et al. 2014 (GEO: GSE52778). 
+library(airway)
+# DESeq2: the statistical engine for the whole project. It models raw RNA-seq counts with
+# a negative binomial GLM, which correctly handles the mean-variance relationship in count
+# data.
+library(DESeq2)
+# SummarizedExperiment: airway's data lives in this container class; we need its accessor
+# functions (assay(), colData()) to pull out the count matrix and sample metadata.
+library(SummarizedExperiment)
+# ggplot2: used for the PCA and volcano plots
+library(ggplot2)
+# pheatmap: a quick, clean way to draw the top-gene expression heatmap.
+library(pheatmap)
+# org.Hs.eg.db + AnnotationDbi: airway's count matrix is indexed by Ensembl gene ID
+# (e.g. ENSG00000103196), which nobody can interpret on sight. This annotation database
+# lets us map IDs to human-readable gene symbols (e.g. CRISPLD2) for interpretation.
+library(org.Hs.eg.db)
+library(AnnotationDbi)
+# apeglm: provides a shrunken, more reliable log2 fold-change estimator than the raw MLE,
+# which matters because raw fold-changes for low-count genes are extremely noisy and would
+# otherwise dominate a naive "rank by fold-change" approach.
+library(apeglm)
+```
+
+```{r load-data}
+# data() loads the airway SummarizedExperiment that ships inside the package.
+data("airway")
+se <- airway
+# colData() holds sample-level metadata. Print allows confirmation that this is
+# a paired design: 4 donor cell lines, each with one "trt" (dex) and one "untrt" sample. 
+colData(se)
+# assay() pulls out the gene x sample count matrix itself. Checking dim() before any
+# filtering gives us a concrete starting number to report in the QC section.
+dim(assay(se))
+```
+
+### 3. Preprocessing / QC
+
+```{r qc-filter}
+# Most of the ~64,000 annotated genes have zero or near-zero counts in ASM cells
+# as they are not expressed in airway smooth muscle cells. As such, any gene with
+# fewer than 10 total reads is filtered out across all 8 samples.
+keep <- rowSums(assay(se)) >= 10
+se_filtered <- se[keep, ]
+
+cat("Genes before filtering:", nrow(se), "\n")
+cat("Genes after filtering: ", nrow(se_filtered), "\n")
+```
+
+```{r qc-libsize}
+# Sequencing depth naturally varies sample to sample. We plot total counts per sample here
+# purely as a QC check: if one sample were a severe outlier (e.g. 10x lower depth than the
+# rest), that would be a red flag to investigate before trusting any downstream comparison.
+libsize_df <- data.frame(
+  sample = colnames(se_filtered),
+  total_counts = colSums(assay(se_filtered)),
+  dex = colData(se_filtered)$dex
+)
+
+ggplot(libsize_df, aes(x = sample, y = total_counts, fill = dex)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Total mapped read counts per sample", x = "Sample", y = "Total counts")
+```
+
+### 4. Statistical Analysis: DESeq2
+
+Using **DESeq2** rather than a simple fold-change cutoff or t-test because RNA-seq
+counts are discrete, over-dispersed, and heteroskedastic (variance grows with the
+mean). DESeq2's negative-binomial GLM with empirical Bayes dispersion shrinkage is
+built specifically to model that, and gives us calibrated p-values even with only
+n = 4 replicates per group.
+
+```{r build-dds}
+# The design formula "~ cell + dex" tells DESeq2 to first account for baseline
+# differences between the 4 donor cell lines (a known, paired source of variation
+# each line contributes both a treated and untreated sample), and THEN test for the dex
+# effect on top of that. This mirrors the paired design used in the original study and
+# increases statistical power versus ignoring donor identity entirely.
+dds <- DESeqDataSet(se_filtered, design = ~ cell + dex)
+
+# DESeq2 orders factor levels alphabetically by default, which would make "trt" the
+# reference (denominator) we explicitly set "untrt" as the reference level instead, so
+# that a POSITIVE log2FoldChange means "higher after dexamethasone," which is the more
+# intuitive direction when we interpret results later.
+dds$dex <- relevel(dds$dex, ref = "untrt")
+
+# This single call runs the full DESeq2 pipeline: (1) median-of-ratios size factor
+# normalization to correct for sequencing depth differences between samples, (2) per-gene
+# dispersion estimation that borrows information across genes (necessary because 4
+# replicates alone can't reliably estimate variance gene-by-gene), and (3) fits the negative
+# binomial GLM and runs the Wald test for the dex coefficient.
+dds <- DESeq(dds)
+```
+
+```{r extract-results}
+# results() with an explicit contrast extracts the dex trt-vs-untrt comparison.
+# alpha = 0.05 tells DESeq2 to optimize its internal adaptive FDR filtering for that cutoff.
+res <- results(dds, contrast = c("dex", "trt", "untrt"), alpha = 0.05)
+
+# lfcShrink replaces the raw (noisy) log2FoldChange estimates with ones shrunken toward
+# zero using the apeglm method. Genes with low counts or high variance get pulled in, so
+# the fold-changes we go on to RANK and PLOT reflect real effect sizes rather than sampling
+# noise from a handful of reads.
+res_shrunk <- lfcShrink(dds, coef = "dex_trt_vs_untrt", res = res, type = "apeglm")
+
+# A first concrete headline number for the report/video: how many genes are significantly
+# up vs down at FDR < 0.05.
+summary(res_shrunk)
+```
+
+```{r annotate-results}
+# Convert to a plain data frame and keep the Ensembl ID as an explicit column (it's
+# currently just the rownames, which is easy to lose track of after sorting/filtering).
+res_df <- as.data.frame(res_shrunk)
+res_df$ensembl_id <- rownames(res_df)
+
+# mapIds looks up each Ensembl gene ID in org.Hs.eg.db and returns the matching gene
+# symbol. We need this because "ENSG00000103196" may not be significant at first glance, 
+# but "CRISPLD2" is a recognizable/searchable gene.
+res_df$symbol <- mapIds(org.Hs.eg.db,
+                         keys = res_df$ensembl_id,
+                         column = "SYMBOL",
+                         keytype = "ENSEMBL",
+                         multiVals = "first")
+
+# Drop genes DESeq2 could not test (NA padj are usually genes with an extreme-count outlier
+# or filtered out internally for very low mean expression), so our ranked table only
+# contains genes with an actual usable result.
+res_df <- res_df[!is.na(res_df$padj), ]
+
+# Sort by adjusted p-value so row 1 is the single most significant gene. 
+res_df <- res_df[order(res_df$padj), ]
+
+head(res_df, 10)
+```
+
+### 5. Visualization
+
+```{r pca-plot}
+# vst() (variance-stabilizing transformation) puts the data on a roughly homoskedastic
+# scale suitable for distance-based methods like PCA so the results will not be primarily
+# made up of very highly-expressed genes rather than overall sample similarity.
+vsd <- vst(dds, blind = FALSE)
+
+# returnData = TRUE gives us the raw PC coordinates instead of DESeq2's default base plot,
+# so we can re-draw it in ggplot2 with full control over color/shape/styling.
+pca_data <- plotPCA(vsd, intgroup = c("dex", "cell"), returnData = TRUE)
+percentVar <- round(100 * attr(pca_data, "percentVar"))
+
+ggplot(pca_data, aes(x = PC1, y = PC2, color = dex, shape = cell)) +
+  geom_point(size = 4) +
+  labs(
+    title = "PCA of airway smooth muscle samples",
+    x = paste0("PC1 (", percentVar[1], "% variance)"),
+    y = paste0("PC2 (", percentVar[2], "% variance)")
+  ) +
+  theme_minimal()
+```
+
+```{r volcano-plot}
+# Flag genes as "significant" using BOTH an FDR cutoff AND a minimum effect size, not just
+# a p-value cutoff alone to avoid highlighting genes that are "significant" purely
+# because of statistical power but have a trivially small, biologically uninteresting
+# fold-change.
+res_df$significant <- with(res_df, padj < 0.05 & abs(log2FoldChange) > 1)
+
+ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj), color = significant)) +
+  geom_point(alpha = 0.6, size = 1.2) +
+  scale_color_manual(values = c("grey70", "firebrick")) +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey40") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
+  labs(
+    title = "Dexamethasone vs. untreated airway smooth muscle cells",
+    x = "log2 fold change (treated / untreated)",
+    y = "-log10 adjusted p-value"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r heatmap-top-genes}
+# Take just the top 20 genes by adjusted p-value 
+# to capture the strongest and most reproducible signal in the data.
+top_genes <- head(res_df$ensembl_id, 20)
+
+# Use the SAME variance-stabilized values as the PCA (not raw counts), so a few very
+# highly-expressed genes don't visually dominate the color scale.
+mat <- assay(vsd)[top_genes, ]
+
+# Re-label rows with gene symbols instead of Ensembl IDs so the heatmap is actually
+# readable when shown on screen in the video.
+rownames(mat) <- res_df$symbol[match(top_genes, res_df$ensembl_id)]
+
+# Pull in sample metadata so the heatmap's column annotation bar shows treatment + donor.
+annotation_col <- as.data.frame(colData(vsd)[, c("dex", "cell")])
+
+# scale = "row" centers each gene around its OWN mean across samples. This turns the plot
+# into a "relatively high vs. low" view per gene, which is what matters for differential
+# expression: otherwise genes with naturally high baseline expression would visually
+# swamp genes that are lower-expressed but still strongly regulated.
+pheatmap(mat,
+         scale = "row",
+         annotation_col = annotation_col,
+         main = "Top 20 differentially expressed genes")
+```
+
+### 6. Interpretation
+
+```{r top-hits-table}
+res_df[1:10, c("symbol", "log2FoldChange", "padj")]
+```
+
+Several of our top hits re-cover genes already known from the literature to be
+glucocorticoid-responsive in this exact system. In the original analysis of this
+dataset, Himes et al. (2014, *PLoS One*, doi: 10.1371/journal.pone.0099625, GEO:
+GSE52778) reported 316 differentially expressed genes after dexamethasone
+treatment, including well-established glucocorticoid targets (DUSP1, KLF15, PER1,
+TSC22D3) alongside a less-studied gene, **CRISPLD2**, which they validated by
+qRT-PCR and went on to show modulates IL-1beta-induced cytokine expression in ASM
+cells. They additionally found that SNPs near CRISPLD2 were associated with
+inhaled corticosteroid resistance and bronchodilator response in two independent
+asthma GWAS cohorts, making it a strong pharmacogenetic gene candidate for asthma
+treatment response. 
+
+**Why this matters biologically:** glucocorticoids act by binding the
+glucocorticoid receptor, which then alters transcription of genes that dampen
+inflammatory signaling. Finding these specific genes from an independent
+analysis is a useful internal validation that this pipeline works (filtering →
+DESeq2 → shrinkage → significance calling). 
+
+### 7. Limitations and Next Steps
+
+- Sample size is pretty small (n = 4 paired donors); rare or donor-specific responses
+  may be underpowered to detect.
+- This is a single time point (18 hours) and single dose (1 micromolar), so
+  the dynamics of the glucocorticoid response over time/dose are not captured.
+- Cultured, primary ASM cells in isolation may not fully reflect the *in vivo*
+  airway environment (e.g., immune cell crosstalk is absent).
+- A natural next step would be gene set / pathway enrichment (e.g., GO or
+  Reactome) on the full significant gene list to characterize the response at
+  a pathway level rather than gene-by-gene, or comparing this corticosteroid-naive
+  response to RNA-seq from corticosteroid-resistant asthma patients.
+
+### 8. Reproducibility
+
+```{r session-info}
+sessionInfo()
+```
+
+**Data availability:** Himes BE et al. *RNA-Seq Transcriptome Profiling Identifies
+CRISPLD2 as a Glucocorticoid Responsive Gene that Modulates Cytokine Function in
+Airway Smooth Muscle Cells.* PLoS One. 2014;9(6):e99625. PMID: 24926665.
+Raw data: GEO accession GSE52778. Processed counts accessed via installing the Bioconductor
+`airway` package.

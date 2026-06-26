@@ -1,0 +1,56 @@
+---
+title: "Differential Gene Expression in Human Gingival Tissue During Periodontitis"
+author: "Andrea Torres"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+Periodontitis is a chronic inflammatory disease that affects the supporting tissues of the teeth. This project analyzes RNA-seq data from human gingival tissue to identify genes that are differentially expressed between healthy individuals and patients with periodontitis.
+
+## Research Question
+Which genes are differentially expressed in gingival tissue from periodontitis patients compared with healthy controls?
+
+## Data Acquisition
+The dataset used is GSE173078 from GEO. It includes RNA-seq profiles from healthy, gingivitis, and periodontitis gingival tissue samples.
+
+## Methods
+Raw count data will be analyzed using DESeq2. Healthy and periodontitis samples will be compared to identify differentially expressed genes.
+
+```{r}
+res <- results(
+  dds,
+  contrast=c("condition",
+             "Periodontitis",
+             "Healthy")
+)
+```
+```{r}
+Filter 
+sig <- subset(
+  res,
+  padj < 0.05 &
+  abs(log2FoldChange) > 1
+)
+```
+
+
+
+## Results
+The main outputs will include:
+- PCA plot
+- MA plot
+- Volcano plot
+- Table of top differentially expressed genes
+
+## Interpretation
+Genes with increased expression in periodontitis may reflect inflammation, immune-cell recruitment, and periodontal tissue breakdown.
+
+## Limitations
+This analysis uses publicly available data and does not include clinical covariates such as age, sex, smoking status, or disease severity.
+
+## Reproducibility
+Session information and all code will be included.

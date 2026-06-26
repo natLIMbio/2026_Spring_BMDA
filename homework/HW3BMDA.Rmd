@@ -19,21 +19,89 @@ In Homework 1 you downloaded and QC'd the 33 FASTQ files for the HIV/TB dataset 
    
   1. Yes
   2. No
-
+  
 ```{r, eval=FALSE}
-require("BiocManager")
+# Download hg38 reference genome
+options(timeout = 3600)  # extend timeout for large file
+download.file(
+  url = "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz",
+  destfile = "C:/Users/unowh/hg38.fna.gz",
+  mode = "wb"
+)
 
+# Decompress
+require(R.utils)
+R.utils::gunzip("C:/Users/unowh/hg38.fna.gz", destname = "C:/Users/unowh/hg38.fa", remove = FALSE)
+```
+```{r}
 library(Rsubread)
-buildindex("genomefile", "genomefile.fa")
 
-align("genomefile", "myfastqfile.fq", 
-      output_file="myfastq.bam", nthreads = 4)
+# Step 1: Build index (do once, takes 30-60 min)
+buildindex(
+  basename  = "C:/Users/unowh/hg38_index",
+  reference = "C:/Users/unowh/hg38.fa"
+)
 ```
 
+```{r}
+library(Rsubread)
+
+# Get all 33 fastq files
+fastq_files <- list.files(
+  "C:/hiv-tb-data",
+  pattern = "\\.fastq$",
+  full.names = TRUE
+)
+
+# Check we have all 33
+length(fastq_files)
+
+# Set output BAM file paths
+bam_files <- file.path(
+  "C:/hiv-tb-data",
+  sub("\\.fastq$", ".bam", basename(fastq_files))
+)
+
+# Run alignment
+align(
+  index       = "C:/Users/unowh/hg38_index",
+  readfile1   = fastq_files,
+  output_file = bam_files,
+  type        = "rna",
+  nthreads    = 4
+)
+```
 
 ##### 2. Use the `featureCounts` function in the `Rsubread` package to generate a counts file for this dataset. Upload your feature counts .txt file here.
 
+```{r}
+# Step 3: featureCounts (Q2)
+# Download GTF annotation first
+download.file(
+  url = "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz",
+  destfile = "C:/Users/unowh/gencode.v44.gtf.gz",
+  mode = "wb"
+)
+R.utils::gunzip("C:/Users/unowh/gencode.v44.gtf.gz", destname = "C:/Users/unowh/gencode.v44.gtf", remove = FALSE)
 
+# Run featureCounts
+fc <- featureCounts(
+  files                  = bam_files,
+  annot.ext              = "C:/Users/unowh/gencode.v44.gtf",
+  isGTFAnnotationFile    = TRUE,
+  nthreads               = 4,
+  isPairedEnd            = FALSE
+)
+
+# Save output for Q2 upload
+write.table(
+  fc$counts,
+  file      = "C:/Users/unowh/NL_featureCounts.txt",
+  sep       = "\t",
+  quote     = FALSE,
+  col.names = NA
+)
+```
 
 For the rest of the assignment, please use the feature counts provided by Dr. Johnson in the lecture materials: {https://github.com/wevanjohnson/2026_Spring_BMDA/raw/refs/heads/main/lectures/week6/example_data/features_combined.txt}{features_combined.txt (link)}
 
