@@ -755,6 +755,73 @@ Cells.</em> PLoS One. 2014;9(6):e99625. PMID: 24926665. Raw data: GEO
 accession GSE52778. Processed counts accessed via installing the
 Bioconductor <code>airway</code> package.</p>
 </div>
+<div id="comments" class="section level3">
+<h3>Comments!</h3>
+<ol style="list-style-type: decimal">
+<li><p>Elina Nemtsov: Elina - p75NTRKO RNA Seq Analysis Hi Elina, I
+really liked that you related your final project to your research on the
+p75 neurotrophin receptor and made it available on GitHub! Using the
+show/hide code options also makes trying to go through the code a lot
+easier. The QC scores and checks are great as well, it’s really easy to
+look at and know how good your dataset is for later analysis! My main
+suggestion would be using something like res_df$symbol &lt;-
+mapIds(org.Hs.eg.db, keys = res_df$ensembl_id, column = “SYMBOL”,
+keytype = “ENSEMBL”, multiVals = “first”) to swap out the Ensemble codes
+with the actual gene names. As well, explaining more of the purpose of
+p75NTR would be helpful for others to know the significance of this
+research. Otherwise, an amazing analysis and comparison to the original
+study!</p></li>
+<li><p>Amna Aleem: Using single cell RNA seq. to analyze EGFR-mutant
+transformed small cell lung cancer Hi Amna, this is a really great
+walkthrough of single cell RNA sequencing! I liked how you explored the
+Neuroendocrine and Non-neuroendocrine states, how they relate to lung
+cancer, and even explaining the original study that this dataset comes
+from, which is something I should have done in my own project! Watching
+through it I felt like I was learning how many more libraries can be
+used in R such as Seurat, which I would not have considered before this.
+My main suggestion is because I did not fully understand was the
+orange/pink in the back of the QC plots, and maybe next time you could
+use a box plot or explain that a little bit more! Otherwise, the rest of
+your explanations were very clear! This is a really great and detailed
+analysis which is comparable to a research paper. Awesome job!</p></li>
+<li><p>Angel Hernandez: Homework 4 – Lipid Droplet Differential
+Expression Analysis in the Brain vs the Spinal Cord Oligodendroglia Hi
+Angel! This is a super in-depth analysis of postnatal mouse
+oligodendrocytes using the paper published by your lab but looking at a
+different aspect of it relating to cholesterol biosynthesis and storage
+genes. I like that you used the Seurat to count and sort the metadata of
+the genes before using them for the RNA Seq. Using the DotPlot for the
+lipid droplet genes is a nice touch, as it looks kind of like droplets
+falling down the page. Although maybe you could sort them from greatest
+to least in terms of percent expression for the viewer to more easily
+see the top expressed vs least expressed genes!<br />
+My main suggestion would be that you could spend a little less time on
+the background in the presentation/recording, and focus more on the
+Methodology/Data Analysis portions because there is so much great
+content to walkthrough here!! Overall, a very solid analysis with
+amazing graphs and explanations!</p></li>
+<li><p>Nikhil Parab: Nikhil’s Homework 4: Transcriptional Effects of
+Persistent β2-Agonist Treatment Hi Nikhil, I had no idea we ended up
+looking at different sides of the same dataset with yours focusing on
+Albuterol instead, that is such a funny coincidence! As such, your
+additional background info on the genes combined with the references and
+usage of EnrichR really helps to tie it all together, which is something
+I missed in my own analysis. Cleaning up the genes before the analysis
+was helpful, but my suggestion for the Gene ID page would then be to
+replace the Ensemble Gene IDs with the actual gene names using something
+like: res_df$symbol &lt;- mapIds(org.Hs.eg.db, keys = res_df$ensembl_id,
+column = “SYMBOL”, keytype = “ENSEMBL”, multiVals = “first”). Noting
+that the variability of treated vs untreated was grouped due to the
+donors was helpful as a reflection/possible limitation for the results
+and efficacy for Albuterol on different people. A future suggestion
+could be to also cross reference the genes across each person to see if
+there were any specific genes that made any patient more or less
+responsive to the Albuterol etc. Overall, great presentation and
+walkthrough of the data!</p></li>
+<li><p>Andrea Torres: Hey Andrea!</p></li>
+</ol>
+<p>Nat</p>
+</div>
 
 
 
